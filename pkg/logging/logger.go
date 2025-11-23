@@ -1,0 +1,147 @@
+package logging
+
+import (
+	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
+	"os"
+	"strings"
+	"sync"
+)
+
+const (
+	Reset   = "\033[0m"
+	Green   = "\033[32m" // INFO & 2xx status
+	Yellow  = "\033[33m" // WARN & 4xx status
+	Red     = "\033[31m" // ERROR & 5xx status
+	Blue    = "\033[34m" // 3xx status & POST method
+	Magenta = "\033[35m" // PUT method
+	Cyan    = "\033[36m" // GET method
+	White   = "\033[37m" // Default
+)
+
+type CustomTextFormatter struct{}
+
+func (f *CustomTextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
+	var color string
+	switch entry.Level {
+	case logrus.InfoLevel:
+		color = Green
+	case logrus.WarnLevel:
+		color = Yellow
+	case logrus.ErrorLevel:
+		color = Red
+	case logrus.DebugLevel:
+		color = Cyan
+	default:
+		color = Reset
+	}
+
+	// Format level with max length 6, padded or truncated
+	level := strings.ToUpper(entry.Level.String())
+	if len(level) > 6 {
+		level = level[:6]
+	} else {
+		level = fmt.Sprintf("%-6s", level) // pad with spaces if shorter
+	}
+
+	// Get file name from entry caller (requires SetReportCaller(true))
+	file := "unknown"
+	if entry.Caller != nil {
+		// only filename, not full path
+		parts := strings.Split(entry.Caller.File, "/")
+		file = parts[len(parts)-1]
+	}
+
+	logLine := fmt.Sprintf("[%s]%s | %s | %s | %s\n",
+		level,
+		color, // optional color for level
+		entry.Time.Format("2006-01-02 15:04:05"),
+		entry.Message,
+		file,
+	)
+
+	return []byte(logLine), nil
+}
+
+var (
+	Instance *logrus.Logger
+	once     sync.Once
+)
+
+// InitLogger initializes the logger with a given log level
+func InitLogger(level string) *logrus.Logger {
+	once.Do(func() {
+		Instance = logrus.New()
+		Instance.SetOutput(os.Stdout)
+		Instance.SetFormatter(&CustomTextFormatter{})
+
+		// parse level string
+		parsedLevel, err := logrus.ParseLevel(strings.ToLower(level))
+		if err != nil {
+			parsedLevel = logrus.InfoLevel
+		}
+
+		Instance.SetLevel(parsedLevel)
+	})
+	return Instance
+}
+
+func GetLogger() *logrus.Logger {
+	if Instance == nil {
+		// default to Info if InitLogger wasn’t called explicitly
+		return InitLogger("info")
+	}
+	return Instance
+}
+
+// Gin middleware
+func Middleware(c *gin.Context) {
+	methodColor := getMethodColor(c.Request.Method)
+
+	Instance.WithFields(logrus.Fields{
+		"method": fmt.Sprintf("%s%s%s", methodColor, c.Request.Method, Reset),
+		"path":   c.Request.URL.Path,
+	}).Info("Incoming request")
+
+	c.Next()
+
+	statusCode := c.Writer.Status()
+	statusColor := getStatusColor(statusCode)
+
+	Instance.WithFields(logrus.Fields{
+		"status": fmt.Sprintf("%s%d%s", statusColor, statusCode, Reset),
+		"method": fmt.Sprintf("%s%s%s", methodColor, c.Request.Method, Reset),
+		"path":   c.Request.URL.Path,
+	}).Info("Request handled")
+}
+
+func getMethodColor(method string) string {
+	switch method {
+	case "GET":
+		return Cyan
+	case "POST":
+		return Blue
+	case "PUT":
+		return Magenta
+	case "DELETE":
+		return Red
+	default:
+		return White
+	}
+}
+
+func getStatusColor(status int) string {
+	switch {
+	case status >= 200 && status < 300:
+		return Green
+	case status >= 300 && status < 400:
+		return Blue
+	case status >= 400 && status < 500:
+		return Yellow
+	case status >= 500:
+		return Red
+	default:
+		return White
+	}
+}
