@@ -1,4 +1,4 @@
-module github.com/Sayan80bayev/go-project/pkg
+module github.com/metacode-dream-team/MetaCode/pkg
 
 go 1.24.1
 
