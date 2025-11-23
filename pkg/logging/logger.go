@@ -46,7 +46,7 @@ func (f *CustomTextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	}
 
 	// Pad spaces after closing bracket to make total width 8
-	spaces := 8 - (len(levelText) + 2) // +2 for the brackets []
+	spaces := 8 - (len(levelText) + 2) // +2 for brackets []
 	if spaces < 0 {
 		spaces = 0
 	}
@@ -59,11 +59,12 @@ func (f *CustomTextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		file = parts[len(parts)-1]
 	}
 
-	// Build log line
-	logLine := fmt.Sprintf("[%s%s]%s| %s | %s | %s\n",
-		color,         // color start
-		levelText,     // level text
-		Reset+padding, // reset + spaces after ]
+	// Build log line: only level text is colored
+	logLine := fmt.Sprintf("[%s%s%s]%s| %s | %s | %s\n",
+		Reset,         // reset before [
+		color,         // start color
+		levelText,     // colored level text
+		Reset+padding, // reset color + spaces after ]
 		entry.Time.Format("2006-01-02 15:04:05"),
 		entry.Message,
 		file,
