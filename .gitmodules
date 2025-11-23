@@ -1,0 +1,18 @@
+[submodule "services/auth_service"]
+	path = services/auth_service
+	url = https://github.com/metacode-dream-team/auth_service.git
+[submodule "services/user_profile_service"]
+	path = services/user_profile_service
+	url = https://github.com/metacode-dream-team/user_profile_service.git
+[submodule "services/notification_service"]
+	path = services/notification_service
+	url = https://github.com/metacode-dream-team/notification_service.git
+[submodule "services/engagement_service"]
+	path = services/engagement_service
+	url = https://github.com/metacode-dream-team/engagement_service.git
+[submodule "services/integration_service"]
+	path = services/integration_service
+	url = https://github.com/metacode-dream-team/integration_service.git
+[submodule "services/activity_gamification_service"]
+	path = services/activity_gamification_service
+	url = https://github.com/metacode-dream-team/activity_gamification_service.git
