@@ -6,7 +6,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"time"
 
-	"github.com/Sayan80bayev/go-project/pkg/logging"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -23,7 +22,6 @@ type RedisService struct {
 
 // NewRedisService initializes Redis client from config
 func NewRedisService(cfg RedisConfig) (*RedisService, error) {
-	logger := logging.GetLogger()
 
 	client := redis.NewClient(&redis.Options{
 		Addr:     cfg.Addr,
@@ -35,13 +33,10 @@ func NewRedisService(cfg RedisConfig) (*RedisService, error) {
 	defer cancel()
 
 	if _, err := client.Ping(ctx).Result(); err != nil {
-		logger.Errorf("❌ Failed to connect to Redis at %s: %v", cfg.Addr, err)
 		return nil, fmt.Errorf("failed to connect to redis: %w", err)
 	}
 
-	logger.Infof("✅ Connected to Redis at %s (DB=%d)", cfg.Addr, cfg.DB)
-
-	return &RedisService{client: client, logger: logger}, nil
+	return &RedisService{client: client}, nil
 }
 
 func (c *RedisService) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error {

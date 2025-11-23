@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Sayan80bayev/go-project/pkg/logging"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
@@ -51,8 +50,6 @@ func NewMinioStorage(cfg *MinioConfig) (*MinioStorage, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to MinIO: %w", err)
 	}
-
-	logging.GetLogger().Info("Successfully connected to MinIO")
 
 	return &MinioStorage{
 		client: client,

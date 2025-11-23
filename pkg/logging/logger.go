@@ -37,25 +37,28 @@ func (f *CustomTextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		color = Reset
 	}
 
-	// Format level with max length 6, padded or truncated
-	level := strings.ToUpper(entry.Level.String())
-	if len(level) > 6 {
-		level = level[:6]
+	// Uppercase level text
+	levelText := strings.ToUpper(entry.Level.String())
+
+	// Truncate or pad level to max 5 characters
+	if len(levelText) > 5 {
+		levelText = levelText[:5]
 	} else {
-		level = fmt.Sprintf("%-6s", level) // pad with spaces if shorter
+		levelText = fmt.Sprintf("%-5s", levelText) // pad with spaces
 	}
 
 	// Get file name from entry caller (requires SetReportCaller(true))
 	file := "unknown"
 	if entry.Caller != nil {
-		// only filename, not full path
 		parts := strings.Split(entry.Caller.File, "/")
 		file = parts[len(parts)-1]
 	}
 
-	logLine := fmt.Sprintf("[%s]%s | %s | %s | %s\n",
-		level,
-		color, // optional color for level
+	// Build log line: [<level>] | time | message | file
+	logLine := fmt.Sprintf("[%s%s%s] | %s | %s | %s\n",
+		color,     // color start
+		levelText, // level text
+		Reset,     // reset color
 		entry.Time.Format("2006-01-02 15:04:05"),
 		entry.Message,
 		file,
