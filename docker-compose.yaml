@@ -1,0 +1,108 @@
+version: '3.8'
+
+services:
+  keycloak-db:
+    image: postgres
+    container_name: metacode-keycloak-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloakpass
+      POSTGRES_DB: keycloakdb
+    volumes:
+      - keycloak-pgdata:/var/lib/postgresql/data
+    networks:
+      - metacode
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3.1
+    container_name: metacode-keycloak
+    command: start-dev
+    ports:
+      - "8080:8080"
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL_HOST: metacode-keycloak-postgres
+      KC_DB_URL_DATABASE: keycloakdb
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloakpass
+    depends_on:
+      - keycloak-db
+    networks:
+      - metacode
+
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    container_name: metacode-minio
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin123
+    command: server /data --console-address ":9090"
+    volumes:
+      - minio-data:/data
+    networks:
+      - metacode
+
+  redis:
+    image: redis:latest
+    container_name: metacode-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - metacode
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: zookeeper
+    restart: always
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    networks:
+      - metacode
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: metacode-kafka
+    restart: always
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: go-project-zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://go-project-kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    depends_on:
+      - zookeeper
+    networks:
+      - metacode
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: metacode-mailhog
+    restart: always
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    networks:
+      - metacode
+
+
+volumes:
+  keycloak-pgdata:
+  minio-data:
+
+networks:
+  metacode:
+    driver: bridge

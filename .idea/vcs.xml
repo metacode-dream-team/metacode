@@ -2,10 +2,12 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/activity_gamification_service" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/engagement_service" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/integration_service" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/notification_service" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/user_profile_service" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/services/activity_gamification_service" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/services/auth_service" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/services/auth_service/auth" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/services/engagement_service" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/services/integration_service" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/services/notification_service" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/services/user_profile_service" vcs="Git" />
   </component>
 </project>
