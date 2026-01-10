@@ -3,7 +3,6 @@ package caching
 import (
 	"context"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -17,12 +16,10 @@ type RedisConfig struct {
 
 type RedisService struct {
 	client *redis.Client
-	logger *logrus.Logger
 }
 
 // NewRedisService initializes Redis client from config
 func NewRedisService(cfg RedisConfig) (*RedisService, error) {
-
 	client := redis.NewClient(&redis.Options{
 		Addr:     cfg.Addr,
 		Password: cfg.Password,
@@ -40,65 +37,38 @@ func NewRedisService(cfg RedisConfig) (*RedisService, error) {
 }
 
 func (c *RedisService) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error {
-	if err := c.client.Set(ctx, key, value, expiration).Err(); err != nil {
-		c.logger.Errorf("Redis SET error for key=%s: %v", key, err)
-		return err
-	}
-	c.logger.Debugf("Redis SET key=%s (exp=%s)", key, expiration)
-	return nil
+	return c.client.Set(ctx, key, value, expiration).Err()
 }
 
 func (c *RedisService) Get(ctx context.Context, key string) (string, error) {
 	val, err := c.client.Get(ctx, key).Result()
 	if err == redis.Nil {
-		c.logger.Debugf("Redis GET miss key=%s", key)
 		return "", nil
-	} else if err != nil {
-		c.logger.Errorf("Redis GET error for key=%s: %v", key, err)
-		return "", err
 	}
-	c.logger.Debugf("Redis GET hit key=%s", key)
-	return val, nil
+	return val, err
 }
 
 func (c *RedisService) Delete(ctx context.Context, key string) error {
-	if err := c.client.Del(ctx, key).Err(); err != nil {
-		c.logger.Errorf("Redis DEL error for key=%s: %v", key, err)
-		return err
-	}
-	c.logger.Debugf("Redis DEL key=%s", key)
-	return nil
+	return c.client.Del(ctx, key).Err()
 }
 
 func (c *RedisService) Publish(ctx context.Context, channel, message string) error {
-	if err := c.client.Publish(ctx, channel, message).Err(); err != nil {
-		c.logger.Errorf("Redis PUBLISH error on channel=%s: %v", channel, err)
-		return err
-	}
-	c.logger.Debugf("Redis PUBLISH channel=%s message=%s", channel, message)
-	return nil
+	return c.client.Publish(ctx, channel, message).Err()
 }
 
 func (c *RedisService) Exists(ctx context.Context, key string) (bool, error) {
 	res, err := c.client.Exists(ctx, key).Result()
 	if err != nil {
-		c.logger.Errorf("Redis EXISTS error for key=%s: %v", key, err)
 		return false, err
 	}
 	return res > 0, nil
 }
 
 func (c *RedisService) Subscribe(ctx context.Context, channel string) *redis.PubSub {
-	c.logger.Infof("Redis SUBSCRIBE channel=%s", channel)
 	return c.client.Subscribe(ctx, channel)
 }
 
 // Close gracefully closes Redis connection
 func (c *RedisService) Close() error {
-	if err := c.client.Close(); err != nil {
-		c.logger.Errorf("Error closing Redis client: %v", err)
-		return err
-	}
-	c.logger.Info("Redis client closed gracefully")
-	return nil
+	return c.client.Close()
 }
