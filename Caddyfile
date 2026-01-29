@@ -1,0 +1,17 @@
+http://api.metacode.com {
+    handle /auth* {
+        reverse_proxy metacode-keycloak:8080
+    }
+
+    handle /mail* {
+        reverse_proxy metacode-mailhog:8025
+    }
+
+    handle /v1* {
+        reverse_proxy metacode-auth-service:8081
+    }
+
+    handle {
+        reverse_proxy host.docker.internal:3000
+    }
+}
