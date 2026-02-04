@@ -2,13 +2,26 @@ version: '3.8'
 
 services:
 
+  nginx:
+    image: nginx:stable-alpine
+    container_name: metacode-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - gateway
+      - keycloak
+    networks:
+      - metacode
+
   gateway:
-      image: caddy:2.7-alpine
+      image: metacode-gateway
       container_name: metacode-gateway
       ports:
-        - "80:80"
+        - "8080"
       volumes:
-        - ./Caddyfile:/etc/caddy/Caddyfile
+        - ./config/api-gateway-docker.yaml:/root/config/config.yaml
       extra_hosts:
         - "host.docker.internal:host-gateway"
       depends_on:
@@ -35,6 +48,8 @@ services:
       # using --http-relative-path /auth in order to work with keycloak using local domain
       # http://api.metacode.com/auth
       command: start-dev --http-relative-path /auth
+      ports:
+        - "8080:8080"
       environment:
         KC_BOOTSTRAP_ADMIN_USERNAME: admin
         KC_BOOTSTRAP_ADMIN_PASSWORD: admin
@@ -60,15 +75,20 @@ services:
         - .env
       environment:
         - ENVIRONMENT=dev.docker
-        - PORT=8081
-        - HOST=api.metacode.com
+        - PORT=8080
+        - HOST=localhost
+        - LOGLEVEL=debug
         - FRONTEND_URL=http://api.metacode.com
-        - KEYCLOAK_URL=http://api.metacode.com/auth
+        - KEYCLOAK_URL=http://metacode-keycloak:8080/auth
         - KEYCLOAK_REALM=${KEYCLOAK_REALM}
         - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
         - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
+
+        - EMAIL_FROM=noreply@example.com
         - SMTP_HOST=metacode-mailhog
         - SMTP_PORT=1025
+        - SMTP_USER=
+        - SMTP_PASS=
       extra_hosts:
         - "api.metacode.com:host-gateway"
       depends_on:

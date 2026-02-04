@@ -1,0 +1,50 @@
+port: "8080"
+redis_addr: "metacode-redis:6379"
+
+keycloak_url: "http://metacode-keycloak:8080/auth"
+keycloak_realm: "metacode"
+
+services:
+
+  - name: auth-service
+    prefix: /v1/auth
+    target: http://metacode-auth-service:8080
+    rate_limit: 300
+
+    routes:
+      - path: /register
+        public: true
+
+      - path: /login
+        public: true
+
+      - path: /verify-email
+        public: true
+
+      - path: /token/refresh
+        public: true
+
+      - path: /forgot-password
+        public: true
+
+      - path: /reset-password
+        public: true
+
+      - path: /oauth/link
+        public: true
+
+      - path: /callback
+        public: true
+
+  - name: integration-service
+    prefix: /v1/integration
+    target: http://metacode-integration-service:8080
+    public: false
+    rate_limit: 200
+
+    routes:
+      - path: /profile
+        auth: true
+
+      - path: /calendar
+        auth: true
