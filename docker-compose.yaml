@@ -9,6 +9,8 @@ services:
       - "80:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    extra_hosts:
+      - "localhost:host-gateway"
     depends_on:
       - gateway
       - keycloak
@@ -27,6 +29,7 @@ services:
       depends_on:
         - keycloak
         - auth-service
+        - integration-service
       networks:
         - metacode
 
@@ -95,6 +98,46 @@ services:
         - keycloak
       networks:
         - metacode
+
+  integration-service:
+      image: metacode-integration-service
+      container_name: metacode-integration-service
+      env_file:
+        - .env
+      environment:
+        - ENVIRONMENT=dev.docker
+        - PORT=8080
+        - LOGLEVEL=debug
+        - REDIS_ADDR=metacode-redis:6379
+        - REDIS_PASS=
+
+        - KAFKA_BROKERS=metacode-kafka:9092
+        - KAFKA_TOPIC=integration-events
+        - KAFKA_GROUP_ID=integration-group
+
+        - MONGO_URI=mongodb://mongo:mongopass@metacode-mongo:27017/?authSource=admin
+        - MONGO_DB_NAME=metacode
+
+        - KEYCLOAK_REALM=metacode
+        - KEYCLOAK_URL=http://metacode-keycloak:8080/auth
+        - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
+        - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
+
+        - GITHUB_PAT=${GITHUB_PAT}
+        - GITHUB_APP_CLIENT_ID=${GITHUB_APP_CLIENT_ID}
+        - GITHUB_APP_CLIENT_SECRET=${GITHUB_APP_CLIENT_SECRET}
+        - GITHUB_APP_REDIRECT_URI=http://api.metacode.com/v1/integration/github/provider/callback
+
+        - APE_KEY=${APE_KEY}
+      networks:
+        - metacode
+      depends_on:
+        - mongodb
+        - keycloak
+        - keycloak-db
+        - kafka
+        - zookeeper
+        - redis
 
   minio:
     image: minio/minio:RELEASE.2025-04-22T22-12-26Z

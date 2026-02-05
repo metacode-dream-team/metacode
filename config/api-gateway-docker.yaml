@@ -2,6 +2,7 @@ port: "8080"
 redis_addr: "metacode-redis:6379"
 
 keycloak_url: "http://metacode-keycloak:8080/auth"
+keycloak_issuer: "http://api.metacode.com/auth/realms/metacode"
 keycloak_realm: "metacode"
 
 services:
@@ -39,12 +40,72 @@ services:
   - name: integration-service
     prefix: /v1/integration
     target: http://metacode-integration-service:8080
-    public: false
     rate_limit: 200
 
     routes:
+      # Existing private routes
       - path: /profile
         auth: true
 
       - path: /calendar
         auth: true
+
+      # ----------------------------
+      # GitHub Integration (GET = public)
+      # ----------------------------
+      - path: /github/calendar
+        auth: true
+
+      - path: /github/calendar/byYear
+        auth: true
+
+      - path: /github/provider/start
+        auth: true
+
+      - path: /github/provider/callback
+        auth: true
+
+      # DELETE = private
+      - path: /github/unlink
+        auth: true
+        verified: true
+
+      # ----------------------------
+      # LeetCode Integration (GET = public)
+      # ----------------------------
+      - path: /leetcode/user
+        auth: true
+
+      - path: /leetcode/user/byYear
+        auth: true
+
+      # POST/DELETE = private
+      - path: /leetcode/bind
+        auth: true
+        verified: true
+
+      - path: /leetcode/unbind
+        auth: true
+        verified: true
+
+      # ----------------------------
+      # Monkeytype Integration (GET = public)
+      # ----------------------------
+      - path: /monkeytype/user
+        auth: true
+
+      # POST/DELETE = private
+      - path: /monkeytype/bind
+        auth: true
+        verified: true
+
+      - path: /monkeytype/unbind
+        auth: true
+        verified: true
+
+      # ----------------------------
+      # SSE Events (GET = public)
+      # ----------------------------
+      - path: /sse/events
+        public: true
+        verified: true
