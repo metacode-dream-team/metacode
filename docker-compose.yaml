@@ -18,7 +18,7 @@ services:
       - metacode
 
   gateway:
-      image: metacode-gateway
+      image: sayansayan123/metacode-gateway:latest
       container_name: metacode-gateway
       ports:
         - "8080"
@@ -72,7 +72,7 @@ services:
         - metacode
 
   auth-service:
-      image: metacode-auth-service
+      image: sayansayan123/metacode-auth-service:latest
       container_name: metacode-auth-service
       env_file:
         - .env
@@ -100,7 +100,7 @@ services:
         - metacode
 
   integration-service:
-      image: metacode-integration-service
+      image: sayansayan123/metacode-integration-service:latest
       container_name: metacode-integration-service
       env_file:
         - .env
