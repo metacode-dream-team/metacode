@@ -13,9 +13,9 @@ const (
 	EventTypeGitHubHistoryImportCompleted = "github.history.import.completed"
 	EventTypeGitHubHistoryImportFailed    = "github.history.import.failed"
 	EventTypeGitHubCurrentYearRefreshed   = "github.current-year.refreshed"
-
-	ReasonsGithubInitialLink    = "initial_link"
-	ReasonsGithubBackgroundSync = "background_sync"
+	EventTypeGitHubTodayContributed       = "github.today.contributed"
+	ReasonsGithubInitialLink              = "initial_link"
+	ReasonsGithubBackgroundSync           = "background_sync"
 )
 
 type GitHubAccountLinked struct {
@@ -65,4 +65,9 @@ type GitHubCurrentYearRefreshed struct {
 	TotalContributions int       `json:"total_contributions"`
 	DaysWithActivity   int       `json:"days_with_activity,omitempty"`
 	RefreshedAt        time.Time `json:"refreshed_at"`
+}
+
+type GithubTodayContributed struct {
+	UserID           uuid.UUID `json:"user_id"`
+	TodayContributed int       `json:"today_contributed"`
 }

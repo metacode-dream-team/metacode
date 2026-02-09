@@ -22,6 +22,8 @@ const (
 	EventTypeMonkeytypeProfileUpdated = "monkeytype.profile.updated"
 
 	EventTypeMonkeytypeCurrentStatsRefreshed = "monkeytype.current-stats.refreshed"
+
+	EventTypeMonkeytypeTodayContributed = "monkeytype.today.contributed"
 )
 
 // -----------------------------------------------------------------------------
@@ -84,4 +86,9 @@ type MonkeytypeCurrentStatsRefreshed struct {
 	MonkeytypeUsername string    `json:"monkeytype_username"`
 	TestsToday         int       `json:"tests_today,omitempty"`
 	RefreshedAt        time.Time `json:"refreshed_at"`
+}
+
+type MonkeytypeTodayContributed struct {
+	UserID           uuid.UUID `json:"user_id"`
+	TodayContributed int       `json:"today_contributed"`
 }

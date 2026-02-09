@@ -6,10 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// ────────────────────────────────────────────────
-// Константы имён событий (Event Types)
-// ────────────────────────────────────────────────
-
 const (
 	EventTypeLeetCodeAccountBound           = "leetcode.account.bound"
 	EventTypeLeetCodeAccountUnbound         = "leetcode.account.unbound"
@@ -19,6 +15,7 @@ const (
 	EventTypeLeetCodeHistoryImportCompleted = "leetcode.history.import.completed"
 	EventTypeLeetCodeHistoryImportFailed    = "leetcode.history.import.failed"
 	EventTypeLeetCodeCurrentYearRefreshed   = "leetcode.current-year.refreshed"
+	EventTypeLeetCodeTodaySolved            = "leetcode.today.solved"
 )
 
 // ────────────────────────────────────────────────
@@ -86,4 +83,9 @@ type LeetCodeCurrentYearRefreshed struct {
 	QuestionsSolved  int       `json:"questions_solved"`
 	ActiveDays       int       `json:"active_days,omitempty"`
 	RefreshedAt      time.Time `json:"refreshed_at"`
+}
+
+type LeetcodeTodaySolved struct {
+	UserID      uuid.UUID `json:"user_id"`
+	TodaySolved int       `json:"today_solved"`
 }
