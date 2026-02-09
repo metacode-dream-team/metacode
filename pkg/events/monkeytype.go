@@ -87,8 +87,3 @@ type MonkeytypeCurrentStatsRefreshed struct {
 	TestsToday         int       `json:"tests_today,omitempty"`
 	RefreshedAt        time.Time `json:"refreshed_at"`
 }
-
-type MonkeytypeTodayContributed struct {
-	UserID           uuid.UUID `json:"user_id"`
-	TodayContributed int       `json:"today_contributed"`
-}

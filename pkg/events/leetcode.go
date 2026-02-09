@@ -84,8 +84,3 @@ type LeetCodeCurrentYearRefreshed struct {
 	ActiveDays       int       `json:"active_days,omitempty"`
 	RefreshedAt      time.Time `json:"refreshed_at"`
 }
-
-type LeetcodeTodaySolved struct {
-	UserID      uuid.UUID `json:"user_id"`
-	TodaySolved int       `json:"today_solved"`
-}

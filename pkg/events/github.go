@@ -66,8 +66,3 @@ type GitHubCurrentYearRefreshed struct {
 	DaysWithActivity   int       `json:"days_with_activity,omitempty"`
 	RefreshedAt        time.Time `json:"refreshed_at"`
 }
-
-type GithubTodayContributed struct {
-	UserID           uuid.UUID `json:"user_id"`
-	TodayContributed int       `json:"today_contributed"`
-}
