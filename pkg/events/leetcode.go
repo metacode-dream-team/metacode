@@ -54,6 +54,9 @@ type LeetCodeProfileUpdated struct {
 	UserID           uuid.UUID `json:"user_id"`
 	LeetCodeUsername string    `json:"leetcode_username"`
 	TotalSolved      int       `json:"total_solved"`
+	EasySolved       int       `json:"easy_solved"`
+	MediumSolved     int       `json:"medium_solved"`
+	HardSolved       int       `json:"hard_solved"`
 	Verified         bool      `json:"verified"`
 	UpdatedAt        time.Time `json:"updated_at"`
 	ChangeReason     string    `json:"change_reason,omitempty"` // "initial_bind", "force_refresh", "background_sync"
