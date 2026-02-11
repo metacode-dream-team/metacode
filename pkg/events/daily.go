@@ -7,9 +7,10 @@ import (
 type Source string
 
 const (
-	SourceGithub     Source = "github"
-	SourceLeetcode   Source = "leetcode"
-	SourceMonkeytype Source = "monkeytype"
+	EventTypeTodayContributed        = "today.contributed"
+	SourceGithub              Source = "github"
+	SourceLeetcode            Source = "leetcode"
+	SourceMonkeytype          Source = "monkeytype"
 )
 
 type TodayContributedEvent struct {
