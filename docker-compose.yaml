@@ -139,6 +139,32 @@ services:
         - zookeeper
         - redis
 
+  activity-gamification-service:
+      image : metacode-activity-gamification-service
+      container_name: metacode-activity-gamification-service
+      environment:
+        - ENVIRONMENT=dev.docker
+        - PORT=8080
+        - LOGLEVEL=debug
+        - REDIS_ADDR=metacode-redis:6379
+        - REDIS_PASS=
+
+        - KAFKA_BROKERS=metacode-kafka:9092
+        - KAFKA_TOPIC=integration-events
+        - KAFKA_GROUP_ID=activity-gamification-group
+
+        - MONGO_URI=mongodb://mongo:mongopass@metacode-mongo:27017/?authSource=admin
+        - MONGO_DB_NAME=metacode
+      networks:
+        - metacode
+      depends_on:
+        - mongodb
+        - keycloak
+        - kafka
+        - zookeeper
+        - redis
+
+
   minio:
     image: minio/minio:RELEASE.2025-04-22T22-12-26Z
     container_name: metacode-minio
