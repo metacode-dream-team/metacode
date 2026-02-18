@@ -9,12 +9,12 @@ const (
 
 type AvatarUpdatedEvent struct {
 	UserID        uuid.UUID `json:"user_id"`
-	S3OriginalKey string    `json:"s3_original_key"`
+	S3OriginalUrl string    `json:"s3_original_url"`
 }
 
 type AvatarProcessingFinishedEvent struct {
 	UserID      uuid.UUID `json:"user_id"`
-	S3SmallKey  string    `json:"s3_small_key"`
-	S3MediumKey string    `json:"s3_medium_key"`
-	S3LargeKey  string    `json:"s3_large_key"`
+	S3SmallUrl  string    `json:"s3_small_url"`
+	S3MediumUrl string    `json:"s3_medium_url"`
+	S3LargeUrl  string    `json:"s3_large_url"`
 }
