@@ -45,6 +45,20 @@ services:
       networks:
         - metacode
 
+  postgres:
+    image: postgres
+    container_name: metacode-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql
+    networks:
+      - metacode
+    ports:
+      - "5432:5432"
+
   keycloak:
       image: quay.io/keycloak/keycloak:26.3.1
       container_name: metacode-keycloak
@@ -100,7 +114,7 @@ services:
         - metacode
 
   integration-service:
-      image: sayansayan123/metacode-integration-service:latest
+      image: metacode-integration-service
       container_name: metacode-integration-service
       env_file:
         - .env
@@ -244,6 +258,7 @@ services:
 
 
 volumes:
+  pgdata:
   keycloak-pgdata:
   minio-data:
   mongo-data:
