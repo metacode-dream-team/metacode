@@ -10,21 +10,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Start ssh-agent and add key
+      - name: Start ssh-agent
         uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
           ssh-passphrase: ${{ secrets.SERVER_SSH_PASSPHRASE }}
 
-      - name: Copy docker-compose.yaml to server
+      - name: Deploy docker-compose remotely
         run: |
-          scp -o StrictHostKeyChecking=no ./docker-compose-remote.yaml \
-          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/user/docker-compose.yaml
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+            cd /home/user
 
-      - name: Start or restart containers
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-          'cd /home/user && docker compose up -d'
+            curl -H "Authorization: token $DEPLOY_PAT" -L \
+            https://raw.githubusercontent.com/metacode-dream-team/metacode/main/docker-compose-remote.yaml \
+            -o docker-compose.yaml
+
+            docker compose up -d
+          EOF
+        env:
+          DEPLOY_PAT: ${{ secrets.DEPLOY_PAT }}
