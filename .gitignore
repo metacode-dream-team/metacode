@@ -1,2 +1,4 @@
 .env
 services/*
+config/key
+config/key.pub
