@@ -14,16 +14,17 @@ jobs:
         uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
-          ssh-passphrase: ${{ secrets.SERVER_SSH_PASSPHRASE }}
 
       - name: Deploy docker-compose remotely
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
             cd /home/user
 
-            curl -H "Authorization: token $DEPLOY_PAT" -L \
-            https://raw.githubusercontent.com/metacode-dream-team/metacode/main/docker-compose-remote.yaml \
-            -o docker-compose.yaml
+            curl -H "Authorization: token $DEPLOY_PAT" \
+                 -H "Accept: application/vnd.github.v3.raw" \
+                 -L \
+                 https://api.github.com/repos/metacode-dream-team/metacode/contents/docker-compose-remote.yaml?ref=main \
+                 -o docker-compose.yaml
 
             docker compose up -d
           EOF
