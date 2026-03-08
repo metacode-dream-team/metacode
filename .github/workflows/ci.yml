@@ -18,14 +18,18 @@ jobs:
       - name: Deploy docker-compose remotely
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+            mkdir -p /home/user/metacode
+            cd /home/user/metacode
+
+            if [ ! -d ".git" ]; then
+              git clone https://${{ secrets.DEPLOY_PAT }}@github.com/metacode-dream-team/metacode.git .
+            else
+              git pull
+            fi
+
+            cp docker-compose-remote.yaml /home/user/docker-compose.yaml
+
             cd /home/user
-
-            curl -H "Authorization: token $DEPLOY_PAT" \
-                 -H "Accept: application/vnd.github.v3.raw" \
-                 -L \
-                 https://api.github.com/repos/metacode-dream-team/metacode/contents/docker-compose-remote.yaml?ref=main \
-                 -o docker-compose.yaml
-
             docker compose up -d
           EOF
         env:
