@@ -40,7 +40,7 @@ services:
       KC_HOSTNAME_STRICT: "false"
       KC_HTTP_ENABLED: "true"
 
-      KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+      KAFKA_BOOTSTRAP_SERVERS: "metacode-kafka:9092"
       KAFKA_TOPIC: "user-events"
     volumes:
       - /home/user/keycloak-theme:/opt/keycloak/themes/keycloak-theme
