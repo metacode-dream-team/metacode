@@ -3,8 +3,8 @@ package events
 import "github.com/google/uuid"
 
 const (
-	EventTypeAvatarUpdatedEvent            = "avatar.avatar.updated"
-	EventTypeAvatarProcessingFinishedEvent = "avatar.avatar.processing.finished"
+	EventTypeAvatarUpdatedEvent            = "avatar.updated"
+	EventTypeAvatarProcessingFinishedEvent = "avatar.processing.finished"
 )
 
 type AvatarUpdatedEvent struct {
