@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package metacode.notification.v1;
+
+option go_package = "github.com/metacode-dream-team/MetaCode/pkg/pb/notification";
+
+import "google/protobuf/timestamp.proto";
+
+service NotificationService {
+
+  rpc Send(SendRequest) returns (SendResponse);
+}
+
+enum NotificationType {
+  NOTIFICATION_TYPE_UNSPECIFIED = 0;
+
+  NOTIFICATION_TYPE_SYSTEM_LEETCODE_LINKED = 1;
+  NOTIFICATION_TYPE_SYSTEM_MONKEYTYPE_LINKED = 2;
+
+  NOTIFICATION_TYPE_SOCIAL_FOLLOW = 3;
+  NOTIFICATION_TYPE_SOCIAL_COMMENT = 4;
+  NOTIFICATION_TYPE_SOCIAL_MENTION = 5;
+  NOTIFICATION_TYPE_SOCIAL_REPLY = 6;
+  NOTIFICATION_TYPE_SOCIAL_REACTION = 7;
+
+  NOTIFICATION_TYPE_ACHIEVEMENT_UNLOCKED = 8;
+}
+
+enum Priority {
+  PRIORITY_LOW = 0;
+
+  PRIORITY_MEDIUM = 1;
+
+  PRIORITY_HIGH = 2;
+
+}
+
+message SendRequest {
+
+  string user_id = 1;
+
+  string title = 2;
+
+  string payload = 3;
+
+  NotificationType type = 4;
+
+  Priority priority = 5;
+
+  google.protobuf.Timestamp created_at = 6;
+
+  map<string, string> metadata = 7;
+}
+
+message SendResponse {
+  string notification_id = 1;
+
+  bool delivered = 2;
+
+}
