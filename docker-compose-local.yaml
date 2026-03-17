@@ -1,0 +1,288 @@
+version: '3.8'
+
+services:
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: metacode-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    extra_hosts:
+      - "localhost:host-gateway"
+    depends_on:
+      - gateway
+      - keycloak
+    networks:
+      - metacode
+
+  gateway:
+      image: sayansayan123/metacode-gateway:latest
+      container_name: metacode-gateway
+      ports:
+        - "8080"
+      volumes:
+        - ./config/api-gateway-docker.yaml:/root/config/config.yaml
+      extra_hosts:
+        - "host.docker.internal:host-gateway"
+      depends_on:
+        - keycloak
+        - auth-service
+        - integration-service
+      networks:
+        - metacode
+
+  keycloak-db:
+      image: postgres
+      container_name: metacode-keycloak-postgres
+      environment:
+        POSTGRES_USER: keycloak
+        POSTGRES_PASSWORD: keycloakpass
+        POSTGRES_DB: keycloakdb
+      volumes:
+        - keycloak-pgdata:/var/lib/postgresql
+      networks:
+        - metacode
+
+  postgres:
+    image: postgres
+    container_name: metacode-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql
+    networks:
+      - metacode
+    ports:
+      - "5432:5432"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3.1
+    container_name: metacode-keycloak
+    command: start-dev --http-relative-path /auth
+    ports:
+      - "8080:8080"
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL_HOST: metacode-keycloak-postgres
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloakpass
+      KC_DB_URL_DATABASE: keycloakdb
+      KC_HOSTNAME: api.metacode.com
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+
+      KAFKA_BOOTSTRAP_SERVERS: "metacode-kafka:9092"
+      KAFKA_TOPIC: "user-events"
+
+    volumes:
+      - ./keycloak-theme:/opt/keycloak/themes/keycloak-theme
+      # Mount your JAR file here
+      - ./services/keycloak-event-listener/build/libs/keycloak-event-listener-1.0.0.jar:/opt/keycloak/providers/keycloak-event-listener.jar
+    depends_on:
+      - keycloak-db
+      # - kafka  <-- Ensure your kafka service name matches this if it's in this compose file
+    networks:
+      - metacode
+
+  auth-service:
+      image: sayansayan123/metacode-auth-service:latest
+      container_name: metacode-auth-service
+      env_file:
+        - .env
+      environment:
+        - ENVIRONMENT=dev.docker
+        - PORT=8080
+        - HOST=localhost
+        - LOGLEVEL=debug
+        - FRONTEND_URL=http://api.metacode.com
+        - KEYCLOAK_URL=http://metacode-keycloak:8080/auth
+        - KEYCLOAK_REALM=${KEYCLOAK_REALM}
+        - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
+        - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
+
+        - EMAIL_FROM=noreply@example.com
+        - SMTP_HOST=metacode-mailhog
+        - SMTP_PORT=1025
+        - SMTP_USER=
+        - SMTP_PASS=
+      extra_hosts:
+        - "api.metacode.com:host-gateway"
+      depends_on:
+        - keycloak
+      networks:
+        - metacode
+
+  integration-service:
+      image: metacode-integration-service
+      container_name: metacode-integration-service
+      env_file:
+        - .env
+      environment:
+        - ENVIRONMENT=dev.docker
+        - PORT=8080
+        - LOGLEVEL=debug
+        - REDIS_ADDR=metacode-redis:6379
+        - REDIS_PASS=
+
+        - KAFKA_BROKERS=metacode-kafka:9092
+        - KAFKA_TOPIC=integration-events
+        - KAFKA_GROUP_ID=integration-group
+
+        - MONGO_URI=mongodb://mongo:mongopass@metacode-mongo:27017/?authSource=admin
+        - MONGO_DB_NAME=metacode
+
+        - KEYCLOAK_REALM=metacode
+        - KEYCLOAK_URL=http://metacode-keycloak:8080/auth
+        - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
+        - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
+
+        - GITHUB_PAT=${GITHUB_PAT}
+        - GITHUB_APP_CLIENT_ID=${GITHUB_APP_CLIENT_ID}
+        - GITHUB_APP_CLIENT_SECRET=${GITHUB_APP_CLIENT_SECRET}
+        - GITHUB_APP_REDIRECT_URI=http://api.metacode.com/v1/integration/github/provider/callback
+
+        - APE_KEY=${APE_KEY}
+      networks:
+        - metacode
+      depends_on:
+        - mongodb
+        - keycloak
+        - keycloak-db
+        - kafka
+        - zookeeper
+        - redis
+
+  activity-gamification-service:
+      image : metacode-activity-gamification-service
+      container_name: metacode-activity-gamification-service
+      environment:
+        - ENVIRONMENT=dev.docker
+        - PORT=8080
+        - LOGLEVEL=debug
+        - REDIS_ADDR=metacode-redis:6379
+        - REDIS_PASS=
+
+        - KAFKA_BROKERS=metacode-kafka:9092
+        - KAFKA_TOPIC=integration-events
+        - KAFKA_GROUP_ID=activity-gamification-group
+
+        - MONGO_URI=mongodb://mongo:mongopass@metacode-mongo:27017/?authSource=admin
+        - MONGO_DB_NAME=metacode
+      networks:
+        - metacode
+      depends_on:
+        - mongodb
+        - keycloak
+        - kafka
+        - zookeeper
+        - redis
+
+
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    container_name: metacode-minio
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin123
+    command: server /data --console-address ":9090"
+    volumes:
+      - minio-data:/data
+    networks:
+      - metacode
+
+  redis:
+    image: redis:latest
+    container_name: metacode-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - metacode
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: metacode-zookeeper
+    restart: always
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    networks:
+      - metacode
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: metacode-kafka
+    restart: always
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: metacode-zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://metacode-kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    depends_on:
+      - zookeeper
+    networks:
+      - metacode
+
+  kafbat-ui:
+    image: ghcr.io/kafbat/kafka-ui:latest
+    container_name: metacode-kafka-ui
+    ports:
+      - "8081:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: metacode-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: metacode-kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: metacode-zookeeper:2181
+      DYNAMIC_CONFIG_ENABLED: 'true'
+    depends_on:
+      - kafka
+    networks:
+      - metacode
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: metacode-mailhog
+    restart: always
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    networks:
+      - metacode
+
+  mongodb:
+    image: mongo:6.0
+    container_name: metacode-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongo
+      MONGO_INITDB_ROOT_PASSWORD: mongopass
+    networks:
+      - metacode
+
+
+volumes:
+  pgdata:
+  keycloak-pgdata:
+  minio-data:
+  mongo-data:
+
+networks:
+  metacode:
+    driver: bridge
