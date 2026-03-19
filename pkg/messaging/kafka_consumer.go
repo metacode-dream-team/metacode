@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/metacode-dream-team/MetaCode/pkg/events"
@@ -19,12 +20,15 @@ type ConsumerConfig struct {
 	BootstrapServers string
 	GroupID          string
 	Topics           []string
-	// EnableLogging toggles our custom logs
-	EnableLogging bool
-	// LogOutput defines where to send regular logs (e.g., os.Stdout)
-	LogOutput io.Writer
-	// ErrOutput defines where to send error logs (e.g., os.Stderr)
-	ErrOutput io.Writer
+	EnableLogging    bool
+	LogOutput        io.Writer
+	ErrOutput        io.Writer
+
+	// ReadTimeout defines how long the consumer waits for a message (ms)
+	// Default is 1000ms to prevent CPU busy loops
+	ReadTimeout int
+	// ErrorBackoff defines pause duration after a non-timeout error
+	ErrorBackoff time.Duration
 }
 
 type KafkaConsumer struct {
@@ -36,12 +40,18 @@ type KafkaConsumer struct {
 }
 
 func NewKafkaConsumer(cfg ConsumerConfig) (*KafkaConsumer, error) {
-	// Fallback to default writers if not provided
+	// Set default values for optional fields
 	if cfg.LogOutput == nil {
 		cfg.LogOutput = os.Stdout
 	}
 	if cfg.ErrOutput == nil {
 		cfg.ErrOutput = os.Stderr
+	}
+	if cfg.ReadTimeout <= 0 {
+		cfg.ReadTimeout = 1000 // 1 second default
+	}
+	if cfg.ErrorBackoff <= 0 {
+		cfg.ErrorBackoff = 2 * time.Second
 	}
 
 	kafkaConfig := &kafka.ConfigMap{
@@ -51,9 +61,8 @@ func NewKafkaConsumer(cfg ConsumerConfig) (*KafkaConsumer, error) {
 		"broker.address.family": "v4",
 	}
 
-	// If logging is disabled, we tell librdkafka to be quiet
 	if !cfg.EnableLogging {
-		kafkaConfig.SetKey("log_level", 0)
+		_ = kafkaConfig.SetKey("log_level", 0)
 	}
 
 	c, err := kafka.NewConsumer(kafkaConfig)
@@ -83,29 +92,41 @@ func (c *KafkaConsumer) Start(ctx context.Context) {
 	c.logInfo("Consumer started. Subscribed to: %v", c.config.Topics)
 
 	for {
-		select {
-		case <-ctx.Done():
+		// Check context cancellation to stop the loop
+		if ctx.Err() != nil {
 			c.logInfo("Context cancelled, stopping consumer...")
 			return
-		default:
-			msg, err := c.consumer.ReadMessage(100)
-			if err != nil {
-				var kafkaErr kafka.Error
-				if errors.As(err, &kafkaErr) && kafkaErr.Code() == kafka.ErrTimedOut {
-					continue
-				}
-				c.logErr("Message read error: %v", err)
+		}
+
+		// ReadMessage is a blocking call up to ReadTimeout.
+		// Increasing this value drastically reduces CPU usage during idle periods.
+		msg, err := c.consumer.ReadMessage(time.Duration(c.config.ReadTimeout) * time.Millisecond)
+
+		if err != nil {
+			var kafkaErr kafka.Error
+			if errors.As(err, &kafkaErr) && kafkaErr.Code() == kafka.ErrTimedOut {
+				// Expected timeout when no messages are available
 				continue
 			}
-			c.handleMessage(msg)
+
+			c.logErr("Message read error: %v. Retrying in %v...", err, c.config.ErrorBackoff)
+
+			// Prevent rapid error loops (e.g., broker disconnect) from spiking CPU
+			select {
+			case <-time.After(c.config.ErrorBackoff):
+				continue
+			case <-ctx.Done():
+				return
+			}
 		}
+
+		c.handleMessage(msg)
 	}
 }
 
 func (c *KafkaConsumer) handleMessage(msg *kafka.Message) {
 	var event events.Event
 
-	// Logging raw message for debugging if enabled
 	c.logInfo("Received message from topic %s", *msg.TopicPartition.Topic)
 
 	if err := json.Unmarshal(msg.Value, &event); err != nil {
@@ -126,14 +147,12 @@ func (c *KafkaConsumer) handleMessage(msg *kafka.Message) {
 	}
 }
 
-// Internal helper for info logging
 func (c *KafkaConsumer) logInfo(format string, v ...interface{}) {
 	if c.config.EnableLogging {
 		c.logger.Printf(format, v...)
 	}
 }
 
-// Internal helper for error logging
 func (c *KafkaConsumer) logErr(format string, v ...interface{}) {
 	if c.config.EnableLogging {
 		c.errLogger.Printf(format, v...)
@@ -141,5 +160,6 @@ func (c *KafkaConsumer) logErr(format string, v ...interface{}) {
 }
 
 func (c *KafkaConsumer) Close() {
+	c.logInfo("Closing Kafka consumer...")
 	_ = c.consumer.Close()
 }
