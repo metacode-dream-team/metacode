@@ -6,7 +6,7 @@ services:
     image: sayansayan123/metacode-gateway:latest
     container_name: metacode-gateway
     ports:
-      - "8080"
+      - "8080:8080"
     volumes:
       - ./config/api-gateway-docker.yaml:/root/config/config.yaml
     extra_hosts:
