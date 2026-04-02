@@ -56,22 +56,22 @@ services:
     networks:
       - metacode
 
-#  activity-gamification-service:
-#    image: sayansayan123/metacode-activity-gamification-service:latest
-#    container_name: metacode-activity-gamification-service
-#    env_file: .env
-#    environment:
-#      - ENVIRONMENT=dev.docker
-#      - PORT=8080
-#      - LOGLEVEL=${LOGLEVEL}
-#      - REDIS_ADDR=${REDIS_ADDR}
-#      - KAFKA_BROKERS=${KAFKA_BROKERS}
-#      - KAFKA_TOPIC=${GAMIFICATION_TOPIC}
-#      - KAFKA_GROUP_ID=${GAMIFICATION_GROUP}
-#      - MONGO_URI=${MONGO_URI}
-#      - MONGO_DB_NAME=${MONGO_DB_NAME}
-#    networks:
-#      - metacode
+  activity-gamification-service:
+    image: sayansayan123/metacode-activity-gamification-service:latest
+    container_name: metacode-activity-gamification-service
+    env_file: .env
+    environment:
+      - ENVIRONMENT=dev.docker
+      - PORT=8080
+      - LOGLEVEL=${LOGLEVEL}
+      - REDIS_ADDR=${REDIS_ADDR}
+      - KAFKA_BROKERS=${KAFKA_BROKERS}
+      - KAFKA_TOPIC=${GAMIFICATION_TOPIC}
+      - KAFKA_GROUP_ID=${GAMIFICATION_GROUP}
+      - MONGO_URI=${MONGO_URI}
+      - MONGO_DB_NAME=${MONGO_DB_NAME}
+    networks:
+      - metacode
 
   user-profile-service:
     image: sayansayan123/metacode-user-profile-service:latest
