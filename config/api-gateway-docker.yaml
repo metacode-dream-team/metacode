@@ -18,10 +18,10 @@ services:
     target: http://metacode-integration-service:8080
     auth_required: true
 
-#  - name: activity-gamification-service
-#    prefix: /v1/gamification
-#    target: http://metacode-activity-gamification-service:8080
-#    auth_required: true
+  - name: activity-gamification-service
+    prefix: /v1/gamification
+    target: http://metacode-activity-gamification-service:8080
+    auth_required: true
 
   - name: file-service
     prefix: /v1/fileservice
