@@ -23,6 +23,11 @@ services:
     target: http://metacode-activity-gamification-service:8080
     auth_required: true
 
+  - name: engagement-service
+    prefix: /v1/engagement
+    target: http://metacode-engagement-service:8080
+    auth_required: true
+
   - name: file-service
     prefix: /v1/fileservice
     target: http://metacode-file-service-service:8080

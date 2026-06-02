@@ -128,6 +128,23 @@ services:
     networks:
       - metacode
 
+  engagement-service:
+    image: sayansayan123/metacode-engagement-service
+    container_name: metacode-engagement-service
+    env_file: .env
+    environment:
+      - ENVIRONMENT=dev.docker
+      - PORT=8080
+      - POSTGRES_DSN=${ENGAGEMENT_POSTGRES_DSN}
+      - MONGO_DB=${ENGAGEMENT_MONGO_DB}
+      - MONGO_DB_NAME=${ENGAGEMENT_MONGO_DB_NAME}
+      - KAFKA_BROKERS=${ENGAGEMENT_KAFKA_BROKERS}
+      - KAFKA_GROUP_ID=${ENGAGEMENT_KAFKA_GROUP_ID}
+      - KAFKA_TOPICS=${ENGAGEMENT_KAFKA_TOPICS}
+      - KAFKA_PRODUCER_TOPIC=${ENGAGEMENT_KAFKA_PRODUCER_TOPIC}
+    networks:
+        - metacode
+
 networks:
   metacode:
     driver: bridge
