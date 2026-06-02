@@ -19,7 +19,7 @@ services:
     auth_required: true
 
   - name: activity-gamification-service
-    prefix: /v1/gamification
+    prefix: /v1/activity
     target: http://metacode-activity-gamification-service:8080
     auth_required: true
 
