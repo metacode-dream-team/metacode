@@ -72,6 +72,7 @@ services:
       - KAFKA_GROUP_ID=${GAMIFICATION_GROUP}
       - MONGO_URI=${MONGO_URI}
       - MONGO_DB_NAME=${GAMIFICATION_MONGO_DB_NAME}
+      - INTEGRATION_SERVICE_URL=${INTEGRATION_SERVICE_URL}
     networks:
       - metacode
 
