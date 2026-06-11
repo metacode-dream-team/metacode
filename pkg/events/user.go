@@ -6,6 +6,7 @@ const (
 	EventTypeUserRegistered = "user.registered"
 	EventTypeUserUpdated    = "user.updated"
 	EventTypeUserDeleted    = "user.deleted"
+	EventTypeUserVerified   = "user.verified"
 )
 
 type UserRegistered struct {
@@ -21,5 +22,9 @@ type UserUpdated struct {
 }
 
 type UserDeleted struct {
+	UserID uuid.UUID `json:"user_id"`
+}
+
+type UserEmailVerified struct {
 	UserID uuid.UUID `json:"user_id"`
 }
