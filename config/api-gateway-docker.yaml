@@ -38,6 +38,11 @@ services:
     target: http://metacode-user-profile-service:8080
     auth_required: true
 
+  - name: notification-service
+    prefix: /v1/notification
+    target: http://metacode-notification-service:8080
+    auth_required: true
+
     rules:
       - pattern: /admin
         email_verified: true
